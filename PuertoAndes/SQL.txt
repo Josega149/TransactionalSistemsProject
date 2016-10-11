@@ -1,0 +1,175 @@
+CREATE TABLE BUQUE  (
+idBuque INT PRIMARY KEY,
+nombre VARCHAR(50) NOT NULL,
+nombre_Agente VARCHAR(50) NOT NULL,
+registro_Cap VARCHAR(20) NOT NULL,
+peso FLOAT NOT NULL,
+tipo VARCHAR (20) CONSTRAINT ck_tipo check (tipo IN ('M','P','R')),
+proceso_de_Carga VARCHAR(1) CONSTRAINT ck_Proceso_Carga check (proceso_de_Carga IN ('T','F')),
+proceso_de_Descarga VARCHAR(1) CONSTRAINT ck_Proceso_Descarga check (proceso_de_Descarga IN ('T','F')),
+carga_Completada VARCHAR(1) CONSTRAINT ck_Carga_Completada check (carga_Completada IN ('T','F')),
+descarga_Completada VARCHAR(1) CONSTRAINT ck_Descarga_Completada check (descarga_Completada IN ('T','F')),
+deshabilitado VARCHAR(1) CONSTRAINT ck_Deshabilitado check (deshabilitado IN ('A','M','L','N')), 
+ciudad_Destino VARCHAR(20),
+ciudad_Origen VARCHAR(20)
+)
+
+CREATE TABLE BUQUE_MULTIPROPOSITO  (
+idBuque INT  CONSTRAINT idBuque_Multiproposito REFERENCES BUQUE(idBuque) PRIMARY KEY,
+capacidadEnToneladas FLOAT NOT NULL
+)
+
+CREATE TABLE BUQUE_RORO  (
+idBuque INT  CONSTRAINT idBuque_RORO REFERENCES BUQUE(idBuque) PRIMARY KEY,
+capacidadEnToneladas FLOAT NOT NULL
+)
+
+CREATE TABLE BUQUE_PORTACONTENEDORES  (
+idBuque INT  CONSTRAINT idBuque_Portacontenedores REFERENCES BUQUE(idBuque) PRIMARY KEY,
+capacidadEnTEU FLOAT NOT NULL
+)
+
+CREATE TABLE CAMION  (
+idCamion INT PRIMARY KEY,
+capacidad FLOAT NOT NULL,
+empresa_Encargada VARCHAR(30) NOT NULL
+)
+
+CREATE TABLE AREA_ALMACENAMIENTO  (
+idAreaAlm INT PRIMARY KEY,
+tipo VARCHAR (20),
+habilitado VARCHAR (1) CONSTRAINT ck_habilitado check (habilitado IN ('T','F')),
+capacidad_total FLOAT NOT NULL,
+peso_actual FLOAT NOT NULL
+)
+
+CREATE TABLE BODEGA  (
+idBodega INT  CONSTRAINT idAreaAlm_Bodega REFERENCES AREA_ALMACENAMIENTO(idAreaAlm) PRIMARY KEY,
+largo FLOAT NOT NULL,
+ancho FLOAT NOT NULL,
+tiene_Plataforma VARCHAR(1) CONSTRAINT ck_tiene_Plataforma check (tiene_Plataforma IN ('T','F')),
+separacion_entre_col FLOAT NOT NULL
+)
+
+CREATE TABLE COBERTIZO  (
+idCobertizo INT  CONSTRAINT idAreaAlm_Cobertizo REFERENCES AREA_ALMACENAMIENTO(idAreaAlm) PRIMARY KEY,
+dimensiones FLOAT NOT NULL,
+tipo_de_carga VARCHAR(20) NOT NULL
+)
+
+CREATE TABLE PATIO  (
+idPatio INT  CONSTRAINT idAreaAlm_Patio REFERENCES AREA_ALMACENAMIENTO(idAreaAlm) PRIMARY KEY,
+dimensiones FLOAT NOT NULL,
+tipo_de_carga VARCHAR(20) NOT NULL
+)
+
+CREATE TABLE SILO  (
+idSilo INT  CONSTRAINT idAreaAlm_Silo REFERENCES AREA_ALMACENAMIENTO(idAreaAlm) PRIMARY KEY,
+nombre VARCHAR (20) NOT NULL
+)
+
+CREATE TABLE CUARTO_FRIO  (
+idCuartoFrio INT PRIMARY KEY,
+area FLOAT NOT NULL,
+largo FLOAT NOT NULL,
+ancho FLOAT NOT NULL,
+alto FLOAT NOT NULL,
+area_en_funcion_de_bodega INT NOT NULL,
+idBodega INT CONSTRAINT idBodega REFERENCES BODEGA(idBodega) NOT NULL
+)
+
+CREATE TABLE DUEÑO (
+idDueño INT PRIMARY KEY, 
+nombre VARCHAR(20)NOT NULL
+)
+
+CREATE TABLE IMPORTADOR (
+idImportador INT  CONSTRAINT idImportador REFERENCES DUEÑO(idDueño) PRIMARY KEY,
+registro_Aduana VARCHAR (20) NOT NULL,
+es_habitual VARCHAR (1)CONSTRAINT ck_es_habitual check (es_habitual IN ('T','F'))
+)
+
+CREATE TABLE EXPORTADOR (
+idExportador INT  CONSTRAINT idExportador REFERENCES DUEÑO(idDueño) PRIMARY KEY,
+RUT VARCHAR (20) NOT NULL
+)
+
+CREATE TABLE CARGA  (
+idCarga INT PRIMARY KEY,
+peso FLOAT NOT NULL,
+tiempo_Estadia INT NOT NULL,
+tipo VARCHAR (20) NOT NULL,
+origen VARCHAR(20) NOT NULL,
+destino VARCHAR (20) NOT NULL,
+idBuque INT  CONSTRAINT idBuque REFERENCES BUQUE(idBuque) ,
+idAlmacenamiento INT  CONSTRAINT idAlmacenamiento  REFERENCES AREA_ALMACENAMIENTO(idAreaAlm),
+idDueño INT CONSTRAINT idDueño REFERENCES DUEÑO(idDueño)
+)
+
+CREATE TABLE COSTO_FACTURADO(
+idCostoFacturado INT PRIMARY KEY,
+costo  float ,
+fecha DATE
+)
+
+CREATE TABLE ACTIVIDAD_MARITIMA  (
+idActMar      INT PRIMARY KEY,
+fecha_Llegada DATE,
+fecha_Salida  DATE,
+fecha_Orden DATE,
+es_Descarga   VARCHAR(1)  CONSTRAINT ck_es_descargaM check (es_Descarga  IN ('T','F')),
+arribo_Buque  VARCHAR(1)  CONSTRAINT ck_arribo_Buque check (arribo_Buque IN ('T','F')),
+salida_Buque  VARCHAR(1)  CONSTRAINT ck_salida_Buque check (salida_Buque IN ('T','F')),
+carga_confirmada VARCHAR(1) CONSTRAINT ck_carga_confirmada check (carga_confirmada IN ('T','F')),
+proceso_cd_terminado VARCHAR(1) CONSTRAINT ck_proceso_terminado check (proceso_cd_terminado IN ('T','F')),
+idMuelle INT NOT NULL,
+idOperador INT NOT NULL,
+idAlmacenamiento INT CONSTRAINT idAlmActMar REFERENCES AREA_ALMACENAMIENTO(idAreaAlm),
+idBuque INT CONSTRAINT idBuqueActMar REFERENCES BUQUE(idBuque),
+idCarga INT CONSTRAINT idCargaActMar REFERENCES CARGA(idCarga),
+idCosto INT CONSTRAINT idCostoActMar REFERENCES COSTO_FACTURADO (idCostoFacturado)
+)
+
+
+CREATE TABLE ACTIVIDAD_TERRESTRE (
+idActTer INT PRIMARY KEY,
+fecha_Llegada DATE,
+fecha_Salida DATE,
+es_Descarga VARCHAR(1) CONSTRAINT ck_es_descargaT check (es_Descarga IN ('T','F')),
+carga_Entregada VARCHAR (1) CONSTRAINT ck_carga_Entregada check (carga_Entregada IN ('T','F')),
+idOperador INT,
+idCamion INT CONSTRAINT idCamionActT REFERENCES CAMION(idCamion) ,
+idAlmacenamiento INT CONSTRAINT idAlmacenamientoActT REFERENCES AREA_ALMACENAMIENTO(idAreaAlm),
+idCosto INT CONSTRAINT idCostoActT REFERENCES COSTO_FACTURADO (idCostoFacturado),
+idCarga INT CONSTRAINT idCargaActT REFERENCES CARGA(idCarga)
+)
+
+CREATE TABLE EQUIPO_APOYO  (
+idEquipo INT PRIMARY KEY,
+tipo VARCHAR(20) NOT NULL,
+capacidadTons FLOAT NOT NULL,
+idActMar INT CONSTRAINT idActMar REFERENCES ACTIVIDAD_MARITIMA(idActMar)
+)
+
+CREATE TABLE ACTIVIDAD_ENTREGA_MERCANCIA (
+idEntrega INT PRIMARY KEY,
+idAgente VARCHAR(20) ,
+idCliente VARCHAR (20) ,
+fechaEntrega DATE,
+idCarga VARCHAR (20)
+)
+
+CREATE TABLE MOVIMIENTO_CARGA_AREA(
+idMov INT PRIMARY KEY,
+fecha DATE,
+entrada VARCHAR (1),
+id_Area INT CONSTRAINT fk_idArea REFERENCES AREA_ALMACENAMIENTO(idAreaAlm),
+id_Carga INT CONSTRAINT fk_idCarga REFERENCES CARGA(idCarga)
+)
+
+CREATE TABLE DESCARGAS_INCONCLUSAS  (
+idCarga INT  CONSTRAINT idCarga_Cargaa REFERENCES CARGA(idCarga) PRIMARY KEY,
+idBuque INT  CONSTRAINT idBuque_Buque REFERENCES BUQUE(idBuque),
+fechaEntrega DATE,
+idOperador INT 
+)
